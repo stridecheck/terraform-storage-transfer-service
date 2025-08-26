@@ -1,5 +1,3 @@
-# variables.tf
-
 variable "project_id" {
   type        = string
   description = "Central project that owns Pub/Sub & STS jobs."
