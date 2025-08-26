@@ -15,16 +15,23 @@ provider "google" {
 }
 
 # --- Enable required APIs in the central project ---
+# STS API is split out so we can target-apply it first (creates the STS service agent).
+resource "google_project_service" "sts_api" {
+  project            = var.project_id
+  service            = "storagetransfer.googleapis.com"
+  disable_on_destroy = false
+}
+
+# The rest can be enabled together
 locals {
-  apis = toset([
-    "storagetransfer.googleapis.com",
+  other_apis = toset([
     "pubsub.googleapis.com",
     "storage.googleapis.com",
   ])
 }
 
-resource "google_project_service" "apis" {
-  for_each           = local.apis
+resource "google_project_service" "other_apis" {
+  for_each           = local.other_apis
   project            = var.project_id
   service            = each.value
   disable_on_destroy = false
@@ -39,16 +46,19 @@ data "google_project" "central" {
 data "google_storage_project_service_account" "gcs_sa" {}
 
 # Storage Transfer Service (STS) project service account
-# This call also ensures the managed SA is created after API enablement.
+# This call both *creates* (if needed) and *returns* the managed SA AFTER the API is enabled.
 data "google_storage_transfer_project_service_account" "sts" {
   project    = var.project_id
-  depends_on = [google_project_service.apis["storagetransfer.googleapis.com"]]
+  depends_on = [google_project_service.sts_api]
 }
 
 # --- Pub/Sub topic for source bucket events ---
 resource "google_pubsub_topic" "src_events" {
   name    = "gcs-src-events"
   project = var.project_id
+  depends_on = [
+    google_project_service.other_apis
+  ]
 }
 
 # Allow GCS to publish to the topic
@@ -83,8 +93,9 @@ resource "google_storage_bucket" "dest" {
   project                     = each.value.project
   location                    = var.region
   uniform_bucket_level_access = true
-
   versioning { enabled = true }
+
+  depends_on = [google_project_service.other_apis]
 }
 
 # --- IAM: STS agent read source / write destinations ---
@@ -103,11 +114,11 @@ resource "google_storage_bucket_iam_member" "dest_write" {
 
 # --- Per-job subscription and event-driven STS job ---
 resource "google_pubsub_subscription" "sub" {
-  for_each                     = var.jobs
-  name                         = "sts-${each.key}"
-  topic                        = google_pubsub_topic.src_events.name
-  ack_deadline_seconds         = 300
-  message_retention_duration   = "604800s" # 7 days
+  for_each                   = var.jobs
+  name                       = "sts-${each.key}"
+  topic                      = google_pubsub_topic.src_events.name
+  ack_deadline_seconds       = 300
+  message_retention_duration = "604800s" # 7 days
 }
 
 # Allow STS to consume from each subscription
@@ -146,7 +157,8 @@ resource "google_storage_transfer_job" "job" {
   }
 
   depends_on = [
-    google_project_service.apis,
+    google_project_service.sts_api,
+    google_project_service.other_apis,
     google_pubsub_subscription_iam_member.sub_read,
     google_storage_notification.src_notify,
     google_storage_bucket.dest,
