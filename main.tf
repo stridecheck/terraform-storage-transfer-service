@@ -1,7 +1,18 @@
 terraform {
-  required_version = ">= 1.6.0"
+  # Accept any 1.5.x (works with 1.5.7) and block breaking 2.x
+  required_version = "~> 1.5.0"
+
   required_providers {
-    google = { source = "hashicorp/google", version = ">= 5.29.0" }
+    google = {
+      source  = "hashicorp/google"
+      # Stay on 5.x to avoid TF 1.6+ requirements from 6.x
+      version = ">= 5.29.0, < 6.0.0"
+    }
+    # If you also use archive or others, pin similarly:
+    # archive = {
+    #   source  = "hashicorp/archive"
+    #   version = ">= 2.4.0, < 3.0.0"
+    # }
   }
 }
 
