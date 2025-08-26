@@ -1,3 +1,5 @@
+# main.tf — Event-driven Storage Transfer (prefix-based), TF 1.5.7 compatible
+
 terraform {
   required_version = "~> 1.5.0"
 
@@ -14,15 +16,14 @@ provider "google" {
   region  = var.region
 }
 
-# --- Enable required APIs in the central project ---
-# STS API is split out so we can target-apply it first (creates the STS service agent).
+# --- Enable required APIs ---
+# Split STS so it can be target-applied first if needed.
 resource "google_project_service" "sts_api" {
   project            = var.project_id
   service            = "storagetransfer.googleapis.com"
   disable_on_destroy = false
 }
 
-# The rest can be enabled together
 locals {
   other_apis = toset([
     "pubsub.googleapis.com",
@@ -42,11 +43,10 @@ data "google_project" "central" {
   project_id = var.project_id
 }
 
-# GCS internal SA used to publish bucket notifications to Pub/Sub
+# GCS internal SA used for bucket notifications -> Pub/Sub
 data "google_storage_project_service_account" "gcs_sa" {}
 
-# Storage Transfer Service (STS) project service account
-# This call both *creates* (if needed) and *returns* the managed SA AFTER the API is enabled.
+# Storage Transfer managed SA (created/returned after API enable)
 data "google_storage_transfer_project_service_account" "sts" {
   project    = var.project_id
   depends_on = [google_project_service.sts_api]
@@ -56,9 +56,6 @@ data "google_storage_transfer_project_service_account" "sts" {
 resource "google_pubsub_topic" "src_events" {
   name    = "gcs-src-events"
   project = var.project_id
-  depends_on = [
-    google_project_service.other_apis
-  ]
 }
 
 # Allow GCS to publish to the topic
@@ -94,17 +91,23 @@ resource "google_storage_bucket" "dest" {
   location                    = var.region
   uniform_bucket_level_access = true
   versioning { enabled = true }
-
-  depends_on = [google_project_service.other_apis]
 }
 
-# --- IAM: STS agent read source / write destinations ---
+# --- IAM: STS agent permissions ---
+# Source: needs object read + bucket metadata read
 resource "google_storage_bucket_iam_member" "source_view" {
   bucket = var.source_bucket
   role   = "roles/storage.objectViewer"
   member = "serviceAccount:${data.google_storage_transfer_project_service_account.sts.email}"
 }
 
+resource "google_storage_bucket_iam_member" "source_bucket_meta" {
+  bucket = var.source_bucket
+  role   = "roles/storage.viewer" # includes storage.buckets.get
+  member = "serviceAccount:${data.google_storage_transfer_project_service_account.sts.email}"
+}
+
+# Destinations: needs object admin (write) + bucket metadata read
 resource "google_storage_bucket_iam_member" "dest_write" {
   for_each = local.destinations
   bucket   = google_storage_bucket.dest[each.key].name
@@ -112,13 +115,20 @@ resource "google_storage_bucket_iam_member" "dest_write" {
   member   = "serviceAccount:${data.google_storage_transfer_project_service_account.sts.email}"
 }
 
+resource "google_storage_bucket_iam_member" "dest_bucket_meta" {
+  for_each = local.destinations
+  bucket   = google_storage_bucket.dest[each.key].name
+  role     = "roles/storage.viewer" # includes storage.buckets.get
+  member   = "serviceAccount:${data.google_storage_transfer_project_service_account.sts.email}"
+}
+
 # --- Per-job subscription and event-driven STS job ---
 resource "google_pubsub_subscription" "sub" {
-  for_each                   = var.jobs
-  name                       = "sts-${each.key}"
-  topic                      = google_pubsub_topic.src_events.name
-  ack_deadline_seconds       = 300
-  message_retention_duration = "604800s" # 7 days
+  for_each                     = var.jobs
+  name                         = "sts-${each.key}"
+  topic                        = google_pubsub_topic.src_events.name
+  ack_deadline_seconds         = 300
+  message_retention_duration   = "604800s" # 7 days
 }
 
 # Allow STS to consume from each subscription
@@ -158,11 +168,12 @@ resource "google_storage_transfer_job" "job" {
 
   depends_on = [
     google_project_service.sts_api,
-    google_project_service.other_apis,
     google_pubsub_subscription_iam_member.sub_read,
     google_storage_notification.src_notify,
     google_storage_bucket.dest,
     google_storage_bucket_iam_member.source_view,
+    google_storage_bucket_iam_member.source_bucket_meta,
     google_storage_bucket_iam_member.dest_write,
+    google_storage_bucket_iam_member.dest_bucket_meta,
   ]
 }
