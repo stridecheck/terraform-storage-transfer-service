@@ -94,16 +94,17 @@ resource "google_storage_bucket" "dest" {
 }
 
 # --- IAM: STS agent permissions ---
-# Source: needs object read + bucket metadata read
+# Source: needs object read + bucket metadata read (buckets.get)
 resource "google_storage_bucket_iam_member" "source_view" {
   bucket = var.source_bucket
   role   = "roles/storage.objectViewer"
   member = "serviceAccount:${data.google_storage_transfer_project_service_account.sts.email}"
 }
 
+# Use legacyBucketReader (bucket-level role that includes storage.buckets.get)
 resource "google_storage_bucket_iam_member" "source_bucket_meta" {
   bucket = var.source_bucket
-  role   = "roles/storage.viewer" # includes storage.buckets.get
+  role   = "roles/storage.legacyBucketReader"
   member = "serviceAccount:${data.google_storage_transfer_project_service_account.sts.email}"
 }
 
@@ -118,7 +119,7 @@ resource "google_storage_bucket_iam_member" "dest_write" {
 resource "google_storage_bucket_iam_member" "dest_bucket_meta" {
   for_each = local.destinations
   bucket   = google_storage_bucket.dest[each.key].name
-  role     = "roles/storage.viewer" # includes storage.buckets.get
+  role     = "roles/storage.legacyBucketReader"
   member   = "serviceAccount:${data.google_storage_transfer_project_service_account.sts.email}"
 }
 
