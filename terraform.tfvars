@@ -16,7 +16,7 @@ jobs = {
   adv_analytics = {
     dest_project     = "pj-na2-adv-analytics-gxd"
     dest_bucket      = "sb-na2-adv-analytics-gxd"
-    include_prefixes = ["filemage-private-c567eaa0/AA_", "filemage-private-c567eaa0/aa_"]
+    include_prefixes = ["filemage-private-c567eaa0/DS_", "filemage-private-c567eaa0/ds_"]
     exclude_prefixes = []
   }
 
@@ -24,21 +24,21 @@ jobs = {
   adv_data = {
     dest_project     = "pj-na2-adv-data-02c"
     dest_bucket      = "sb-na2-adv-data-02c"
-    include_prefixes = ["filemage-private-c567eaa0/AP_", "filemage-private-c567eaa0/ap_"]
+    include_prefixes = ["filemage-private-c567eaa0/AD_", "filemage-private-c567eaa0/ad_"]
     exclude_prefixes = []
   }
 
   audit_ADV = {
     dest_project     = "pj-na2-audit-adv-p1v"
     dest_bucket      = "sb-na2-audit-adv-p1v"
-    include_prefixes = ["filemage-private-c567eaa0/AA_", "filemage-private-c567eaa0/aa_"]
+    include_prefixes = ["filemage-private-c567eaa0/AU_", "filemage-private-c567eaa0/au_"]
     exclude_prefixes = []
   }
 
   ent_ai = {
     dest_project     = "pj-na2-ent-ai-ag-7ec"
     dest_bucket      = "sb-na2-ent-ai-ag-7ec"
-    include_prefixes = ["filemage-private-c567eaa0/EA_", "filemage-private-c567eaa0/ea_"]
+    include_prefixes = ["filemage-private-c567eaa0/AG_", "filemage-private-c567eaa0/ag_"]
     exclude_prefixes = []
   }
 
@@ -48,6 +48,35 @@ jobs = {
     include_prefixes = ["filemage-private-c567eaa0/ED_", "filemage-private-c567eaa0/ed_"]
     exclude_prefixes = []
   }
+
+  innovation = {
+    dest_project     = "pj-na2-innovation-ww4"
+    dest_bucket      = "sb-na2-innovation-ww4"
+    include_prefixes = ["filemage-private-c567eaa0/IN_", "filemage-private-c567eaa0/in_"]
+    exclude_prefixes = []
+  }
+
+  opr_risk = {
+    dest_project     = "pj-na2-opr-risk-pcw"
+    dest_bucket      = "pj-na2-opr-risk-pcw"
+    include_prefixes = ["filemage-private-c567eaa0/OR_", "filemage-private-c567eaa0/or_"]
+    exclude_prefixes = []
+  }
+
+  translation = {
+    dest_project     = "pj-na2-translation-cgy"
+    dest_bucket      = "pj-na2-translation-cgy"
+    include_prefixes = ["filemage-private-c567eaa0/TR_", "filemage-private-c567eaa0/tr_"]
+    exclude_prefixes = []
+  }
+
+  us_dmo = {
+    dest_project     = "pj-na2-us-dmo-ud-6m6"
+    dest_bucket      = "pj-na2-us-dmo-ud-6m6"
+    include_prefixes = ["filemage-private-c567eaa0/UD_", "filemage-private-c567eaa0/ud_"]
+    exclude_prefixes = []
+  }
+
 }
 
 overwrite_sink               = true
