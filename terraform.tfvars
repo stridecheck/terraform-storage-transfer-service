@@ -4,12 +4,12 @@ source_bucket = "filemage-private-c567eaa0"
 
 # Multiple files/prefixes, multiple destinations
 jobs = {
-  # Capital Markets: keep "cm-" in filename
+  # Capital Markets
   capital_markets = {
     dest_project     = "pj-na2-cap-markets-0xw"
     dest_bucket      = "sb-na2-cap-markets-0xw2"
-    include_prefixes = ["filemage-private-c567eaa0/CM_","filemage-private-c567eaa0/cm_"]          # matches cm-report.csv, cm-foo/bar.txt, etc.
-    exclude_prefixes = []               # optional
+    include_prefixes = ["filemage-private-c567eaa0/CM_", "filemage-private-c567eaa0/cm_"]
+    exclude_prefixes = []
   }
 
   # AA example: multiple prefixes to same destination
@@ -17,6 +17,7 @@ jobs = {
     dest_project     = "pj-na2-adv-analytics-gxd"
     dest_bucket      = "sb-na2-adv-analytics-gxd"
     include_prefixes = ["filemage-private-c567eaa0/AA_", "filemage-private-c567eaa0/aa_"]
+    exclude_prefixes = []
   }
 
   # AD Apps: two prefixes to one bucket
@@ -24,27 +25,28 @@ jobs = {
     dest_project     = "pj-na2-adv-data-02c"
     dest_bucket      = "sb-na2-adv-data-02c"
     include_prefixes = ["filemage-private-c567eaa0/AP_", "filemage-private-c567eaa0/ap_"]
+    exclude_prefixes = []
   }
 
-  # AD Apps: two prefixes to one bucket
   audit_ADV = {
     dest_project     = "pj-na2-audit-adv-p1v"
     dest_bucket      = "sb-na2-audit-adv-p1v"
     include_prefixes = ["filemage-private-c567eaa0/AA_", "filemage-private-c567eaa0/aa_"]
+    exclude_prefixes = []
   }
 
-  # AD Apps: two prefixes to one bucket
   ent_ai = {
     dest_project     = "pj-na2-ent-ai-ag-7ec"
     dest_bucket      = "sb-na2-ent-ai-ag-7ec"
     include_prefixes = ["filemage-private-c567eaa0/EA_", "filemage-private-c567eaa0/ea_"]
+    exclude_prefixes = []
   }
 
-  # AD Apps: two prefixes to one bucket
   ent_digital = {
     dest_project     = "pj-na2-ent-digital-6wq"
     dest_bucket      = "sb-na2-ent-digital-6wq"
     include_prefixes = ["filemage-private-c567eaa0/ED_", "filemage-private-c567eaa0/ed_"]
+    exclude_prefixes = []
   }
 }
 
