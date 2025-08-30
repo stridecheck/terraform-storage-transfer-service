@@ -73,8 +73,8 @@ data "google_storage_transfer_project_service_account" "sts" {
 # Pub/Sub topic for source bucket events
 # ---------------------------
 resource "google_pubsub_topic" "src_events" {
-  name    = "gcs-src-events"
-  project = var.project_id
+  name      = "gcs-src-events"
+  project   = var.project_id
   depends_on = [google_project_service.other_apis] # ensure Pub/Sub API is enabled
 }
 
@@ -91,6 +91,8 @@ resource "google_storage_notification" "src_notify" {
   topic          = google_pubsub_topic.src_events.id
   payload_format = "JSON_API_V1"
   event_types    = ["OBJECT_FINALIZE"]
+  # Optional filter to reduce noise:
+  # object_name_prefix = "filemage-private-c567eaa0/"
   depends_on     = [google_pubsub_topic_iam_member.topic_pub]
 }
 
@@ -135,6 +137,14 @@ resource "google_storage_bucket_iam_member" "source_view" {
 resource "google_storage_bucket_iam_member" "source_bucket_meta" {
   bucket = var.source_bucket
   role   = "roles/storage.legacyBucketReader"
+  member = "serviceAccount:${data.google_storage_transfer_project_service_account.sts.email}"
+}
+
+# Source bucket: allow delete when using move semantics
+resource "google_storage_bucket_iam_member" "source_delete" {
+  count  = var.delete_source_after_transfer ? 1 : 0
+  bucket = var.source_bucket
+  role   = "roles/storage.objectAdmin" # includes storage.objects.delete
   member = "serviceAccount:${data.google_storage_transfer_project_service_account.sts.email}"
 }
 
@@ -184,14 +194,6 @@ resource "google_storage_transfer_job" "job" {
     name = "projects/${var.project_id}/subscriptions/${google_pubsub_subscription.sub[each.key].name}"
   }
 
-# Source bucket: allow delete when using move semantics
-resource "google_storage_bucket_iam_member" "source_delete" {
-  count  = var.delete_source_after_transfer ? 1 : 0
-  bucket = var.source_bucket
-  role   = "roles/storage.objectAdmin" # includes storage.objects.delete
-  member = "serviceAccount:${data.google_storage_transfer_project_service_account.sts.email}"
-}
-
   transfer_spec {
     gcs_data_source { bucket_name = var.source_bucket }
     gcs_data_sink   { bucket_name = each.value.dest_bucket }
@@ -215,7 +217,7 @@ resource "google_storage_bucket_iam_member" "source_delete" {
     google_storage_bucket.dest,
     google_storage_bucket_iam_member.source_view,
     google_storage_bucket_iam_member.source_bucket_meta,
-    google_storage_bucket_iam_member.source_delete,
+    google_storage_bucket_iam_member.source_delete, # safe even when count=0
     google_storage_bucket_iam_member.dest_write,
     google_storage_bucket_iam_member.dest_bucket_meta,
   ]
