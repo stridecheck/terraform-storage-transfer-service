@@ -154,6 +154,22 @@ resource "google_pubsub_subscription_iam_member" "sub_read" {
   member       = "serviceAccount:${data.google_storage_transfer_project_service_account.sts.email}"
 }
 
+# Write/delete on every destination bucket created above
+resource "google_storage_bucket_iam_member" "dest_write" {
+  for_each = local.destinations
+  bucket   = google_storage_bucket.dest[each.key].name
+  role     = "roles/storage.objectAdmin"
+  member   = "serviceAccount:${data.google_storage_transfer_project_service_account.sts.email}"
+}
+
+# Bucket metadata read on every destination bucket
+resource "google_storage_bucket_iam_member" "dest_bucket_meta" {
+  for_each = local.destinations
+  bucket   = google_storage_bucket.dest[each.key].name
+  role     = "roles/storage.legacyBucketReader"
+  member   = "serviceAccount:${data.google_storage_transfer_project_service_account.sts.email}"
+}
+
 resource "google_storage_transfer_job" "job" {
   for_each    = var.jobs
   project     = var.project_id
