@@ -14,6 +14,7 @@ variable "source_bucket" {
 }
 
 # One job (destination) can match multiple prefixes
+# Added full path
 variable "jobs" {
   description = "Map of transfer jobs keyed by a short name."
   type = map(object({
