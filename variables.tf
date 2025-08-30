@@ -19,7 +19,7 @@ variable "jobs" {
   type = map(object({
     dest_project     = string
     dest_bucket      = string
-    include_prefixes = list(string) # e.g., ["CM_", "cm_"]
+    include_prefixes = list(string) # e.g., ["filemage-private-c567eaa0/CM_", "filemage-private-c567eaa0/cm_"]
     exclude_prefixes = list(string) # use [] if not needed
   }))
 }
