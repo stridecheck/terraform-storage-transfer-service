@@ -200,6 +200,14 @@ resource "google_storage_transfer_job" "job" {
     }
   }
 
+# Source bucket: allow delete when using move semantics
+resource "google_storage_bucket_iam_member" "source_delete" {
+  count  = var.delete_source_after_transfer ? 1 : 0
+  bucket = var.source_bucket
+  role   = "roles/storage.objectAdmin" # includes storage.objects.delete
+  member = "serviceAccount:${data.google_storage_transfer_project_service_account.sts.email}"
+}
+
   depends_on = [
     google_project_service.sts_api,
     google_pubsub_subscription_iam_member.sub_read,
@@ -207,6 +215,7 @@ resource "google_storage_transfer_job" "job" {
     google_storage_bucket.dest,
     google_storage_bucket_iam_member.source_view,
     google_storage_bucket_iam_member.source_bucket_meta,
+    google_storage_bucket_iam_member.source_delete,
     google_storage_bucket_iam_member.dest_write,
     google_storage_bucket_iam_member.dest_bucket_meta,
   ]
