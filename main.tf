@@ -103,6 +103,8 @@ resource "google_storage_bucket" "dest" {
   location                    = var.region
   uniform_bucket_level_access = true
   versioning { enabled = true }
+ # Allow deletion even if objects (and versions) exist
+  force_destroy = true
 }
 
 # --- IAM: STS agent permissions ---
