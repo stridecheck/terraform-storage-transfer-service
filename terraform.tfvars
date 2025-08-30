@@ -12,18 +12,25 @@ jobs = {
     exclude_prefixes = []               # optional
   }
 
-  # HR example: multiple prefixes to same destination
-  #hr = {
+  # AA example: multiple prefixes to same destination
+  #aa = {
   #  dest_project     = "pj-na2-adv-analytics-gxd"
   #  dest_bucket      = "sb-na2-adv-analytics-gxd"
   #  include_prefixes = ["filemage-private-c567eaa0/AA_", "filemage-private-c567eaa0/aa_"]
   #}
 
-  # AI Apps: two prefixes to one bucket
+  # AD Apps: two prefixes to one bucket
   #aiapps = {
-  #  dest_project     = "pj-na2-aiapps-01-prd"
-  #  dest_bucket      = "aiapps-drop-na2"
-  #  include_prefixes = ["na2-", "ai-"]
+  #  dest_project     = "pj-na2-adv-data-02c"
+  #  dest_bucket      = "sb-na2-adv-data-02c"
+  #  include_prefixes = ["filemage-private-c567eaa0/AD_", "filemage-private-c567eaa0/ad_"]
+  #}
+
+  # AD Apps: two prefixes to one bucket
+  #aiapps = {
+  #  dest_project     = "pj-na2-adv-data-02c"
+  #  dest_bucket      = "sb-na2-adv-data-02c"
+  #  include_prefixes = ["filemage-private-c567eaa0/AD_", "filemage-private-c567eaa0/ad_"]
   #}
 }
 
