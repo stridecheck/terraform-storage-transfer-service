@@ -184,6 +184,14 @@ resource "google_storage_transfer_job" "job" {
     name = "projects/${var.project_id}/subscriptions/${google_pubsub_subscription.sub[each.key].name}"
   }
 
+# Source bucket: allow delete when using move semantics
+resource "google_storage_bucket_iam_member" "source_delete" {
+  count  = var.delete_source_after_transfer ? 1 : 0
+  bucket = var.source_bucket
+  role   = "roles/storage.objectAdmin" # includes storage.objects.delete
+  member = "serviceAccount:${data.google_storage_transfer_project_service_account.sts.email}"
+}
+
   transfer_spec {
     gcs_data_source { bucket_name = var.source_bucket }
     gcs_data_sink   { bucket_name = each.value.dest_bucket }
@@ -199,14 +207,6 @@ resource "google_storage_transfer_job" "job" {
       delete_objects_from_source_after_transfer  = var.delete_source_after_transfer
     }
   }
-
-# Source bucket: allow delete when using move semantics
-resource "google_storage_bucket_iam_member" "source_delete" {
-  count  = var.delete_source_after_transfer ? 1 : 0
-  bucket = var.source_bucket
-  role   = "roles/storage.objectAdmin" # includes storage.objects.delete
-  member = "serviceAccount:${data.google_storage_transfer_project_service_account.sts.email}"
-}
 
   depends_on = [
     google_project_service.sts_api,
