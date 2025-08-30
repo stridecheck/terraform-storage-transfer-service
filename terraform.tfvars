@@ -8,7 +8,7 @@ jobs = {
   capital_markets = {
     dest_project     = "pj-na2-cap-markets-0xw"
     dest_bucket      = "sb-na2-cap-markets-0xw2"
-    include_prefixes = ["filemage-private-c567eaa0/CM_","filemage-private-c567eaa0/cm_"]          # matches cm-report.csv, cm-foo/bar.txt, etc.
+    include_prefixes = ["filemage-private-c567eaa0/filemage-private-c567eaa0/CM_","filemage-private-c567eaa0/filemage-private-c567eaa0/cm_"]          # matches cm-report.csv, cm-foo/bar.txt, etc.
     exclude_prefixes = []               # optional
   }
 
