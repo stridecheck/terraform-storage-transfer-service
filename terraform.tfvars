@@ -13,25 +13,32 @@ jobs = {
   }
 
   # AA example: multiple prefixes to same destination
-  #aa = {
-  #  dest_project     = "pj-na2-adv-analytics-gxd"
-  #  dest_bucket      = "sb-na2-adv-analytics-gxd"
-  #  include_prefixes = ["filemage-private-c567eaa0/AA_", "filemage-private-c567eaa0/aa_"]
-  #}
+  adv_analytics = {
+    dest_project     = "pj-na2-adv-analytics-gxd"
+    dest_bucket      = "sb-na2-adv-analytics-gxd"
+    include_prefixes = ["filemage-private-c567eaa0/AA_", "filemage-private-c567eaa0/aa_"]
+  }
 
   # AD Apps: two prefixes to one bucket
-  #aiapps = {
-  #  dest_project     = "pj-na2-adv-data-02c"
-  #  dest_bucket      = "sb-na2-adv-data-02c"
-  #  include_prefixes = ["filemage-private-c567eaa0/AD_", "filemage-private-c567eaa0/ad_"]
-  #}
+  adv_data = {
+    dest_project     = "pj-na2-adv-data-02c"
+    dest_bucket      = "sb-na2-adv-data-02c"
+    include_prefixes = ["filemage-private-c567eaa0/AP_", "filemage-private-c567eaa0/ap_"]
+  }
 
   # AD Apps: two prefixes to one bucket
-  #aiapps = {
-  #  dest_project     = "pj-na2-adv-data-02c"
-  #  dest_bucket      = "sb-na2-adv-data-02c"
-  #  include_prefixes = ["filemage-private-c567eaa0/AD_", "filemage-private-c567eaa0/ad_"]
-  #}
+  audit_ADV = {
+    dest_project     = "pj-na2-audit-adv-p1v"
+    dest_bucket      = "sb-na2-audit-adv-p1v"
+    include_prefixes = ["filemage-private-c567eaa0/AA_", "filemage-private-c567eaa0/aa_"]
+  }
+
+  # AD Apps: two prefixes to one bucket
+  audit_data = {
+    dest_project     = "pj-na2-audit-data-rev"
+    dest_bucket      = "sb-na2-audit-data-rev"
+    include_prefixes = ["filemage-private-c567eaa0/AD_", "filemage-private-c567eaa0/ad_"]
+  }
 }
 
 overwrite_sink               = true
