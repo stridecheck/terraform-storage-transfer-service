@@ -58,21 +58,21 @@ jobs = {
 
   opr_risk = {
     dest_project     = "pj-na2-opr-risk-pcw"
-    dest_bucket      = "pj-na2-opr-risk-pcw"
+    dest_bucket      = "sb-na2-opr-risk-pcw"
     include_prefixes = ["filemage-private-c567eaa0/OR_", "filemage-private-c567eaa0/or_"]
     exclude_prefixes = []
   }
 
   translation = {
     dest_project     = "pj-na2-translation-cgy"
-    dest_bucket      = "pj-na2-translation-cgy"
+    dest_bucket      = "sb-na2-translation-cgy"
     include_prefixes = ["filemage-private-c567eaa0/TR_", "filemage-private-c567eaa0/tr_"]
     exclude_prefixes = []
   }
 
   us_dmo = {
     dest_project     = "pj-na2-us-dmo-ud-6m6"
-    dest_bucket      = "pj-na2-us-dmo-ud-6m6"
+    dest_bucket      = "sb-na2-us-dmo-ud-6m6"
     include_prefixes = ["filemage-private-c567eaa0/UD_", "filemage-private-c567eaa0/ud_"]
     exclude_prefixes = []
   }
