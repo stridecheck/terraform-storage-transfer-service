@@ -1,16 +1,18 @@
 /**
-# main.tf — Event-driven Storage Transfer (prefix-based), TF 1.5.7 compatible
-# 1) Enable Service Usage API (fixes the 403 in your error)
+# Enable required APIs (one-time via gcloud)
+
+# 1) Service Usage API (fixes 403 listing services)
 gcloud services enable serviceusage.googleapis.com \
   --project=pj-na2-hub-control-01-prd-zzf
 
-# 2) Enable the other APIs you need for your TF config
+# 2) Storage / PubSub / Storage Transfer
 gcloud services enable storage.googleapis.com pubsub.googleapis.com storagetransfer.googleapis.com \
   --project=pj-na2-hub-control-01-prd-zzf
 
-# 3) (Optional) Verify they’re enabled
-gcloud services list --enabled --project=pj-na2-hub-control-01-prd-zzf | grep -E 'serviceusage|storage|pubsub|storagetransfer'
- */
+# 3) Verify
+gcloud services list --enabled --project=pj-na2-hub-control-01-prd-zzf | \
+  grep -E 'serviceusage|storage|pubsub|storagetransfer'
+*/
 
 terraform {
   required_version = "~> 1.5.0"
@@ -28,8 +30,9 @@ provider "google" {
   region  = var.region
 }
 
-# --- Enable required APIs ---
-# Split STS so it can be target-applied first if needed.
+# ---------------------------
+# Enable required APIs
+# ---------------------------
 resource "google_project_service" "sts_api" {
   project            = var.project_id
   service            = "storagetransfer.googleapis.com"
@@ -50,24 +53,29 @@ resource "google_project_service" "other_apis" {
   disable_on_destroy = false
 }
 
-# --- Lookups & service accounts ---
+# ---------------------------
+# Lookups & service accounts
+# ---------------------------
 data "google_project" "central" {
   project_id = var.project_id
 }
 
-# GCS internal SA used for bucket notifications -> Pub/Sub
+# GCS project service account (publishes notifications to Pub/Sub)
 data "google_storage_project_service_account" "gcs_sa" {}
 
-# Storage Transfer managed SA (created/returned after API enable)
+# Storage Transfer managed SA (appears after STS API is enabled)
 data "google_storage_transfer_project_service_account" "sts" {
   project    = var.project_id
   depends_on = [google_project_service.sts_api]
 }
 
-# --- Pub/Sub topic for source bucket events ---
+# ---------------------------
+# Pub/Sub topic for source bucket events
+# ---------------------------
 resource "google_pubsub_topic" "src_events" {
   name    = "gcs-src-events"
   project = var.project_id
+  depends_on = [google_project_service.other_apis] # ensure Pub/Sub API is enabled
 }
 
 # Allow GCS to publish to the topic
@@ -86,7 +94,9 @@ resource "google_storage_notification" "src_notify" {
   depends_on     = [google_pubsub_topic_iam_member.topic_pub]
 }
 
-# --- Create unique destination buckets (dedup if multiple jobs share one) ---
+# ---------------------------
+# Destination buckets (dedup if multiple jobs share one)
+# ---------------------------
 locals {
   destinations = {
     for k, j in var.jobs : j.dest_bucket => {
@@ -102,27 +112,33 @@ resource "google_storage_bucket" "dest" {
   project                     = each.value.project
   location                    = var.region
   uniform_bucket_level_access = true
+
   versioning { enabled = true }
- # Allow deletion even if objects (and versions) exist
+
+  # Allow deletion even if objects (and versions) exist
   force_destroy = true
+
+  depends_on = [google_project_service.other_apis] # ensure Storage API is enabled
 }
 
-# --- IAM: STS agent permissions ---
-# Source: needs object read + bucket metadata read (buckets.get)
+# ---------------------------
+# IAM: STS agent permissions
+# ---------------------------
+
+# Source bucket: object read + bucket metadata read
 resource "google_storage_bucket_iam_member" "source_view" {
   bucket = var.source_bucket
   role   = "roles/storage.objectViewer"
   member = "serviceAccount:${data.google_storage_transfer_project_service_account.sts.email}"
 }
 
-# Use legacyBucketReader (bucket-level role that includes storage.buckets.get)
 resource "google_storage_bucket_iam_member" "source_bucket_meta" {
   bucket = var.source_bucket
   role   = "roles/storage.legacyBucketReader"
   member = "serviceAccount:${data.google_storage_transfer_project_service_account.sts.email}"
 }
 
-# Destinations: needs object admin (write) + bucket metadata read
+# Destination buckets: object admin (write/delete) + metadata read
 resource "google_storage_bucket_iam_member" "dest_write" {
   for_each = local.destinations
   bucket   = google_storage_bucket.dest[each.key].name
@@ -137,13 +153,15 @@ resource "google_storage_bucket_iam_member" "dest_bucket_meta" {
   member   = "serviceAccount:${data.google_storage_transfer_project_service_account.sts.email}"
 }
 
-# --- Per-job subscription and event-driven STS job ---
+# ---------------------------
+# Per-job subscription and event-driven STS job
+# ---------------------------
 resource "google_pubsub_subscription" "sub" {
-  for_each                     = var.jobs
-  name                         = "sts-${each.key}"
-  topic                        = google_pubsub_topic.src_events.name
-  ack_deadline_seconds         = 300
-  message_retention_duration   = "604800s" # 7 days
+  for_each                   = var.jobs
+  name                       = "sts-${each.key}"
+  topic                      = google_pubsub_topic.src_events.name
+  ack_deadline_seconds       = 300
+  message_retention_duration = "604800s" # 7 days
 }
 
 # Allow STS to consume from each subscription
@@ -154,22 +172,7 @@ resource "google_pubsub_subscription_iam_member" "sub_read" {
   member       = "serviceAccount:${data.google_storage_transfer_project_service_account.sts.email}"
 }
 
-# Write/delete on every destination bucket created above
-resource "google_storage_bucket_iam_member" "dest_write" {
-  for_each = local.destinations
-  bucket   = google_storage_bucket.dest[each.key].name
-  role     = "roles/storage.objectAdmin"
-  member   = "serviceAccount:${data.google_storage_transfer_project_service_account.sts.email}"
-}
-
-# Bucket metadata read on every destination bucket
-resource "google_storage_bucket_iam_member" "dest_bucket_meta" {
-  for_each = local.destinations
-  bucket   = google_storage_bucket.dest[each.key].name
-  role     = "roles/storage.legacyBucketReader"
-  member   = "serviceAccount:${data.google_storage_transfer_project_service_account.sts.email}"
-}
-
+# Storage Transfer job per entry (prefix-based)
 resource "google_storage_transfer_job" "job" {
   for_each    = var.jobs
   project     = var.project_id
