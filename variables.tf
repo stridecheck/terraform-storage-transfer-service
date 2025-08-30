@@ -19,7 +19,7 @@ variable "jobs" {
   type = map(object({
     dest_project     = string
     dest_bucket      = string
-    include_prefixes = list(string) # e.g., ["cm-", "cm_"]
+    include_prefixes = list(string) # e.g., ["CM_", "cm_"]
     exclude_prefixes = list(string) # use [] if not needed
   }))
 }
