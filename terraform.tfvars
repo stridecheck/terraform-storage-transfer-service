@@ -14,9 +14,9 @@ jobs = {
 
   # HR example: multiple prefixes to same destination
   #hr = {
-  #  dest_project     = "pj-na2-cap-markets-0xw"
-  #  dest_bucket      = "sb-na2-cap-markets-0xw"
-  #  include_prefixes = ["cm-", "people-"]
+  #  dest_project     = "pj-na2-adv-analytics-gxd"
+  #  dest_bucket      = "sb-na2-adv-analytics-gxd"
+  #  include_prefixes = ["filemage-private-c567eaa0/AA_", "filemage-private-c567eaa0/aa_"]
   #}
 
   # AI Apps: two prefixes to one bucket
