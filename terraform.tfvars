@@ -28,4 +28,4 @@ jobs = {
 }
 
 overwrite_sink               = true
-delete_source_after_transfer = false
+delete_source_after_transfer = true
