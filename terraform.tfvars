@@ -34,10 +34,10 @@ jobs = {
   }
 
   # AD Apps: two prefixes to one bucket
-  audit_data = {
-    dest_project     = "pj-na2-audit-data-rev"
-    dest_bucket      = "sb-na2-audit-data-rev"
-    include_prefixes = ["filemage-private-c567eaa0/AD_", "filemage-private-c567eaa0/ad_"]
+  ent_ai = {
+    dest_project     = "pj-na2-ent-ai-ag-7ec"
+    dest_bucket      = "sb-na2-ent-ai-ag-7ec"
+    include_prefixes = ["filemage-private-c567eaa0/EA_", "filemage-private-c567eaa0/ea_"]
   }
 }
 
