@@ -1,4 +1,16 @@
+/**
 # main.tf — Event-driven Storage Transfer (prefix-based), TF 1.5.7 compatible
+# 1) Enable Service Usage API (fixes the 403 in your error)
+gcloud services enable serviceusage.googleapis.com \
+  --project=pj-na2-hub-control-01-prd-zzf
+
+# 2) Enable the other APIs you need for your TF config
+gcloud services enable storage.googleapis.com pubsub.googleapis.com storagetransfer.googleapis.com \
+  --project=pj-na2-hub-control-01-prd-zzf
+
+# 3) (Optional) Verify they’re enabled
+gcloud services list --enabled --project=pj-na2-hub-control-01-prd-zzf | grep -E 'serviceusage|storage|pubsub|storagetransfer'
+ */
 
 terraform {
   required_version = "~> 1.5.0"
